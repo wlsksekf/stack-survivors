@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    image: stack-survivors-backend:latest
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: stack-survivors-backend
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      # 추가 환경변수(FastAPI, LLM API 키 등)를 여기에 구성하세요.
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+    networks:
+      - global-network
+    restart: always
+
+  frontend:
+    image: stack-survivors-frontend:latest
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: stack-survivors-frontend
+    depends_on:
+      - backend
+    networks:
+      - global-network
+    restart: always
+
+networks:
+  global-network:
+    external: true
