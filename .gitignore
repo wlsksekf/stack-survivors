@@ -24,3 +24,12 @@ hs_err_pid*
 replay_pid*
 
 .env*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env/
