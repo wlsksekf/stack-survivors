@@ -51,16 +51,28 @@ export const GameCanvas: React.FC = () => {
           }} />
         </div>
 
-        <button 
-          onClick={togglePause}
-          style={{
-            backgroundColor: '#475569', color: 'white', border: 'none', 
-            borderRadius: '8px', padding: '8px 16px', cursor: 'pointer',
-            fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-          }}
-        >
-          {isPaused && !isLevelUpModalOpen ? 'Resume' : 'Pause'}
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            onClick={togglePause}
+            style={{
+              backgroundColor: '#475569', color: 'white', border: 'none', 
+              borderRadius: '8px', padding: '8px 16px', cursor: 'pointer',
+              fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }}
+          >
+            {isPaused && !isLevelUpModalOpen ? 'Resume' : 'Pause'}
+          </button>
+          <button 
+            onClick={() => useGameStore.getState().setGameState('lobby')}
+            style={{
+              backgroundColor: '#ef4444', color: 'white', border: 'none', 
+              borderRadius: '8px', padding: '8px 16px', cursor: 'pointer',
+              fontWeight: 'bold', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }}
+          >
+            Quit
+          </button>
+        </div>
       </div>
 
       <canvas

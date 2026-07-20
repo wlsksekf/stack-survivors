@@ -14,8 +14,11 @@ interface GameState {
   expToNextLevel: number;
   isPaused: boolean;
   isLevelUpModalOpen: boolean;
+  isQuizModalOpen: boolean;
+  correctAnswers: number;
   activeSkills: ActiveSkill[];
   survivalTime: number; // in seconds
+  setGameState: (state: GameStateEnum) => void;
   
   startGame: () => void;
   setGameOver: (time: number) => void;
@@ -26,17 +29,23 @@ interface GameState {
   togglePause: () => void;
   resumeGame: () => void;
   selectSkill: (skill: string) => void;
+  openQuiz: () => void;
+  closeQuiz: (isCorrect: boolean, skillName?: string) => void;
 }
 
-export const useGameStore = create<GameState>((set) => ({
+export const useGameStore = create<GameState>((set, get) => ({
   gameState: 'lobby',
   level: 1,
   exp: 0,
   expToNextLevel: 10,
   isPaused: false,
   isLevelUpModalOpen: false,
+  isQuizModalOpen: false,
+  correctAnswers: 0,
   activeSkills: [],
   survivalTime: 0,
+
+  setGameState: (state) => set({ gameState: state }),
 
   startGame: () => set({ 
     gameState: 'playing', 
@@ -45,6 +54,8 @@ export const useGameStore = create<GameState>((set) => ({
     expToNextLevel: 10, 
     isPaused: false,
     isLevelUpModalOpen: false,
+    isQuizModalOpen: false,
+    correctAnswers: 0,
     activeSkills: [{ name: 'Basic', level: 1 }], // Give a basic attack
     survivalTime: 0
   }),
@@ -89,5 +100,42 @@ export const useGameStore = create<GameState>((set) => ({
         activeSkills: [...state.activeSkills, { name: skillName, level: 1 }]
       };
     }
-  })
+  }),
+  
+  openQuiz: () => set({ isPaused: true, isQuizModalOpen: true }),
+  
+  closeQuiz: (isCorrect, skillName) => {
+    const state = get();
+    if (isCorrect) {
+      // Upgrade skill by 3 levels!
+      if (skillName) {
+        const existing = state.activeSkills.find(s => s.name === skillName);
+        if (existing) {
+          set({
+            correctAnswers: state.correctAnswers + 1,
+            isPaused: false,
+            isQuizModalOpen: false,
+            activeSkills: state.activeSkills.map(s => 
+              s.name === skillName ? { ...s, level: s.level + 3 } : s
+            )
+          });
+        } else {
+          set({
+            correctAnswers: state.correctAnswers + 1,
+            isPaused: false,
+            isQuizModalOpen: false,
+            activeSkills: [...state.activeSkills, { name: skillName, level: 3 }]
+          });
+        }
+      } else {
+        set({
+          correctAnswers: state.correctAnswers + 1,
+          isPaused: false,
+          isQuizModalOpen: false
+        });
+      }
+    } else {
+      set({ isPaused: false, isQuizModalOpen: false });
+    }
+  }
 }));
