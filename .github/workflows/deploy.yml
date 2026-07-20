@@ -74,6 +74,7 @@ jobs:
             cd /home/${{ secrets.SERVER_USER }}/stack-survivors
             
             echo "${{ secrets.DOT_ENV }}" > .env
+            echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
             
             # Docker Hub 자격 증명 로그인
             echo "${{ secrets.DOCKER_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
