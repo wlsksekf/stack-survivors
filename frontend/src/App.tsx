@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { GameCanvas } from './components/GameCanvas'
 import { Lobby } from './components/Lobby'
 import { GameOverScreen } from './components/GameOverScreen'
