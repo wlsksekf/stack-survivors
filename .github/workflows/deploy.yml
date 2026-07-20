@@ -8,14 +8,12 @@ on:
   workflow_dispatch: # GitHub Actions 탭에서 수동으로 실행할 수 있는 옵션
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # 1. Docker 이미지 빌드 및 푸시
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -38,7 +36,10 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/stack-survivors-backend:latest
 
-      # 2. 서버 접속 후 배포 갱신
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: SSH into Server and Deploy
         uses: appleboy/ssh-action@master
         with:
