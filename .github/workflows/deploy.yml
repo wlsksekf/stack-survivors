@@ -55,3 +55,7 @@ jobs:
             git pull origin main
             docker compose pull
             docker compose up -d --build
+            
+            # 마스터 Nginx에 설정 파일 복사 및 재시작 (권한 필요시 sudo 사용)
+            sudo cp nginx/stack-survivors.conf /etc/nginx/conf.d/
+            sudo systemctl reload nginx

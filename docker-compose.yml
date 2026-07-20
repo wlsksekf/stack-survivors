@@ -9,7 +9,6 @@ services:
     container_name: stack-survivors-backend
     environment:
       - DATABASE_URL=${DATABASE_URL}
-      # 추가 환경변수(FastAPI, LLM API 키 등)를 여기에 구성하세요.
     deploy:
       resources:
         limits:
@@ -30,35 +29,6 @@ services:
     networks:
       - global-network
     restart: always
-
-  nginx:
-    image: nginx:1.25-alpine
-    container_name: nginx-web
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - global-network
-    restart: always
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot-agent
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet && nginx -s reload; sleep 12h & wait $${!}; done'"
-    depends_on:
-      - nginx
-    networks:
-      - global-network
 
 networks:
   global-network:
