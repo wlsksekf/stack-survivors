@@ -94,6 +94,17 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
 
     const player = playerRef.current;
     player.update(dt, width, height);
+    
+    // Quiz Timer Logic
+    // We want to trigger a quiz every 180 seconds (3 minutes)
+    // We can track the previous survival time interval
+    const previousInterval = Math.floor((survivalTimerRef.current - dt) / 180);
+    const currentInterval = Math.floor(survivalTimerRef.current / 180);
+    
+    // If we crossed a 3-minute boundary (e.g. 180s, 360s, 540s)
+    if (currentInterval > previousInterval && currentInterval > 0) {
+      state.openQuiz();
+    }
 
     // Spawn monsters
     spawnTimerRef.current += dt;
