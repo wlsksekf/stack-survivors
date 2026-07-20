@@ -1,5 +1,10 @@
 import { Player } from './Player';
 
+interface MonsterScaling {
+  healthMultiplier: number;
+  speedMultiplier: number;
+}
+
 export class Monster {
   x: number;
   y: number;
@@ -12,7 +17,12 @@ export class Monster {
   isDead: boolean = false;
   emoji: string = '🐞'; // Default emoji
 
-  constructor(x: number, y: number, type: 'ladybug' | 'caterpillar' | 'bee' | 'spider' = 'ladybug') {
+  constructor(
+    x: number,
+    y: number,
+    type: 'ladybug' | 'caterpillar' | 'bee' | 'spider' = 'ladybug',
+    scaling: MonsterScaling = { healthMultiplier: 1, speedMultiplier: 1 }
+  ) {
     this.x = x;
     this.y = y;
 
@@ -50,6 +60,10 @@ export class Monster {
         this.damage = 40;
         break;
     }
+
+    this.speed *= scaling.speedMultiplier;
+    this.health = Math.ceil(this.health * scaling.healthMultiplier);
+    this.maxHealth = Math.ceil(this.maxHealth * scaling.healthMultiplier);
   }
 
   update(dt: number, player: Player) {

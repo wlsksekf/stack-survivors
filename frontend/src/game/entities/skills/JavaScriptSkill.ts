@@ -7,7 +7,6 @@ export class JavaScriptSkill implements IProjectile {
   color: string = '#f7df1e'; // Yellow JS logo
   damage: number = 10;
   isDead: boolean = false;
-  lifespan: number = 5; // Stays around for 5 seconds
   hitCooldowns: Map<Monster, number> = new Map();
   
   texts: { angle: number, speed: number, radiusOffset: number }[] = [];
@@ -17,9 +16,7 @@ export class JavaScriptSkill implements IProjectile {
   y: number = 0;
 
   constructor(_angleOffset: number, level: number) {
-    this.orbitRadius += level * 15;
-    this.damage += level * 3;
-    this.lifespan += level * 2;
+    this.setLevel(level);
     
     // Create 3 floating texts initially
     for(let i=0; i<3; i++) {
@@ -31,6 +28,11 @@ export class JavaScriptSkill implements IProjectile {
     }
   }
 
+  setLevel(level: number) {
+    this.orbitRadius = 100 + level * 15;
+    this.damage = 10 + level * 3;
+  }
+
   update(dt: number, monsters: Monster[], player: Player) {
     this.x = player.x;
     this.y = player.y;
@@ -38,12 +40,6 @@ export class JavaScriptSkill implements IProjectile {
     // Update floating texts
     for (const t of this.texts) {
       t.angle += t.speed * dt;
-    }
-
-    this.lifespan -= dt;
-    if (this.lifespan <= 0) {
-      this.isDead = true;
-      return;
     }
 
     // Update cooldowns

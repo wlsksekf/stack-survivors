@@ -10,7 +10,6 @@ export class HtmlSkill implements IProjectile {
   color: string = '#e34c26'; // HTML orange
   damage: number = 5; // Low damage but high tick rate
   isDead: boolean = false;
-  lifespan: number = 9999; // Permanent (until leveled up/refreshed)
   hitCooldowns: Map<Monster, number> = new Map();
 
   x: number = 0;
@@ -18,8 +17,12 @@ export class HtmlSkill implements IProjectile {
 
   constructor(angleOffset: number, level: number) {
     this.angle = angleOffset;
-    this.orbitRadius += level * 5;
-    this.damage += level * 2;
+    this.setLevel(level);
+  }
+
+  setLevel(level: number) {
+    this.orbitRadius = 50 + level * 5;
+    this.damage = 5 + level * 2;
   }
 
   update(dt: number, monsters: Monster[], player: Player) {

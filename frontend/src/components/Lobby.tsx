@@ -5,17 +5,26 @@ import { supabase } from '../lib/supabase';
 
 interface LeaderboardEntry {
   id: string;
-  username: string;
+  username: string | null;
   survival_time: number;
   level: number;
   correct_answers: number;
+  score?: number;
 }
+
+type AuthMode = 'login' | 'signup';
 
 export const Lobby: React.FC = () => {
   const { startGame } = useGameStore();
   const { user, profile } = useAuthStore();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loadingLB, setLoadingLB] = useState(true);
+  const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [authMessage, setAuthMessage] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
   useEffect(() => {
     fetchLeaderboard();
@@ -35,174 +44,122 @@ export const Lobby: React.FC = () => {
     }
   };
 
-  const handleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-    });
+  const handleGoogleLogin = async () => {
+    await supabase.auth.signInWithOAuth({ provider: 'google' });
+  };
+
+  const handleEmailAuth = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setAuthLoading(true);
+    setAuthMessage('');
+
+    try {
+      if (authMode === 'signup') {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { nickname: nickname.trim() || email.split('@')[0] } }
+        });
+
+        if (error) throw error;
+        setAuthMessage('가입 완료. 메일 인증 설정이 켜져 있다면 인증 후 로그인됩니다.');
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        setAuthMessage('로그인되었습니다.');
+      }
+    } catch (err) {
+      setAuthMessage(err instanceof Error ? err.message : '인증 처리에 실패했습니다.');
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
   };
 
+  const displayName = profile?.nickname || user?.user_metadata?.nickname || user?.email;
+
   return (
-    <div style={{
-      width: '100%', height: '100vh',
-      backgroundColor: '#0a0a0a',
-      backgroundImage: 'radial-gradient(circle at center, #1a1a2e 0%, #0a0a0a 100%)',
-      display: 'flex', flexDirection: 'column',
-      justifyContent: 'center', alignItems: 'center',
-      color: 'white', position: 'relative', overflow: 'hidden'
-    }}>
-      {/* Background Grid Effect */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-        backgroundImage: 'linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px)',
-        backgroundSize: '30px 30px', zIndex: 0, pointerEvents: 'none'
-      }}></div>
+    <main className="screen cyber-bg lobby">
+      <div className="lobby-shell">
+        <section className="brand-block">
+          <h1 className="title-font brand-title">STACK SURVIVORS</h1>
+          <p className="brand-subtitle">버그 웨이브를 버티고 기술 스택을 성장시키세요</p>
+        </section>
 
-      <div style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <h1 className="title-font" style={{ 
-          fontSize: '72px', marginBottom: '10px', 
-          color: '#fff', textShadow: '0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff',
-          letterSpacing: '4px', textAlign: 'center'
-        }}>
-          STACK SURVIVORS
-        </h1>
-        <p style={{ fontSize: '20px', color: '#a5b4fc', marginBottom: '50px', letterSpacing: '2px', textShadow: '0 0 5px #a5b4fc' }}>
-          버그 몬스터를 물리치고 최고의 개발자가 되어보세요!
-        </p>
-
-        <div style={{ display: 'flex', gap: '60px', alignItems: 'flex-start' }}>
-          
-          {/* Action Panel */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {user ? (
-              <div style={{ 
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', 
-                marginBottom: '40px', padding: '20px', borderRadius: '16px',
-                background: 'rgba(30, 41, 59, 0.7)', border: '1px solid #38bdf8',
-                boxShadow: '0 0 15px rgba(56, 189, 248, 0.3)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  {profile?.avatar_url && (
-                    <img 
-                      src={profile.avatar_url} 
-                      alt="Profile" 
-                      style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid #0ea5e9' }}
-                    />
-                  )}
-                  <span style={{ fontSize: '22px', fontWeight: 'bold', color: '#e0f2fe' }}>
-                    환영합니다, <span style={{ color: '#38bdf8' }}>{profile?.nickname || user.email}</span>님!
-                  </span>
+        <section className="lobby-grid">
+          <div>
+            <div className="panel auth-panel">
+              <h2 className="title-font panel-title">ACCESS</h2>
+              {user ? (
+                <div className="user-card">
+                  {profile?.avatar_url && <img className="avatar" src={profile.avatar_url} alt="Profile" />}
+                  <strong>{displayName}</strong>
+                  <button className="secondary-button" onClick={handleLogout}>로그아웃</button>
                 </div>
-                <button 
-                  onClick={handleLogout}
-                  style={{
-                    padding: '8px 20px', fontSize: '14px', fontWeight: 'bold',
-                    backgroundColor: 'transparent', color: '#f87171',
-                    border: '1px solid #f87171', borderRadius: '8px', cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(248, 113, 113, 0.2)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-                >
-                  로그아웃
-                </button>
-              </div>
-            ) : (
-              <button 
-                onClick={handleLogin}
-                style={{
-                  padding: '15px 30px', fontSize: '18px', fontWeight: 'bold',
-                  backgroundColor: 'rgba(255,255,255,0.1)', color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.3)', borderRadius: '12px', cursor: 'pointer',
-                  marginBottom: '40px', display: 'flex', alignItems: 'center', gap: '10px',
-                  backdropFilter: 'blur(5px)', transition: 'all 0.2s'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'; }}
-                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'; }}
-              >
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{ width: '24px' }} />
-                구글로 로그인하고 랭킹 등록하기
-              </button>
-            )}
-            
-            <button 
-              onClick={startGame}
-              className="title-font"
-              style={{
-                padding: '20px 60px', fontSize: '32px', fontWeight: '900',
-                backgroundColor: '#dc2626', color: 'white',
-                border: '2px solid #f87171', borderRadius: '12px', cursor: 'pointer',
-                boxShadow: '0 0 20px rgba(220, 38, 38, 0.6), inset 0 0 10px rgba(255,255,255,0.5)',
-                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-                transition: 'all 0.1s',
-                letterSpacing: '2px'
-              }}
-              onMouseEnter={e => { 
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 0 30px rgba(220, 38, 38, 0.8), inset 0 0 10px rgba(255,255,255,0.5)';
-              }}
-              onMouseLeave={e => { 
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '0 0 20px rgba(220, 38, 38, 0.6), inset 0 0 10px rgba(255,255,255,0.5)';
-              }}
-              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.95)'}
-              onMouseUp={e => e.currentTarget.style.transform = 'scale(1.05)'}
-            >
-              GAME START
-            </button>
+              ) : (
+                <form className="auth-form" onSubmit={handleEmailAuth}>
+                  <div className="auth-tabs">
+                    <button type="button" className={`tab-button ${authMode === 'login' ? 'active' : ''}`} onClick={() => setAuthMode('login')}>로그인</button>
+                    <button type="button" className={`tab-button ${authMode === 'signup' ? 'active' : ''}`} onClick={() => setAuthMode('signup')}>회원가입</button>
+                  </div>
+                  {authMode === 'signup' && (
+                    <input className="cyber-input" value={nickname} onChange={(event) => setNickname(event.target.value)} placeholder="닉네임" />
+                  )}
+                  <input className="cyber-input" value={email} onChange={(event) => setEmail(event.target.value)} type="email" placeholder="이메일" required />
+                  <input className="cyber-input" value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="비밀번호" required minLength={6} />
+                  <button className="auth-button" type="submit" disabled={authLoading}>
+                    {authLoading ? '처리 중...' : authMode === 'signup' ? '이메일로 가입' : '이메일로 로그인'}
+                  </button>
+                  <button className="auth-button google-button" type="button" onClick={handleGoogleLogin}>
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{ width: 20 }} />
+                    Google로 로그인
+                  </button>
+                  <div className="auth-message">{authMessage}</div>
+                </form>
+              )}
+            </div>
+
+            <button className="title-font start-button" onClick={startGame}>GAME START</button>
           </div>
 
-          {/* Leaderboard Section */}
-          <div style={{
-            background: 'linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, rgba(2, 6, 23, 0.9) 100%)', 
-            padding: '25px', borderRadius: '16px',
-            border: '1px solid #334155', minWidth: '400px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1)'
-          }}>
-            <h2 className="title-font" style={{ color: '#fbbf24', marginBottom: '20px', textAlign: 'center', fontSize: '24px', letterSpacing: '2px' }}>
-              GLOBAL RANKING
-            </h2>
+          <div className="panel ranking-panel">
+            <h2 className="title-font panel-title">GLOBAL RANKING</h2>
             {loadingLB ? (
-              <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>데이터 동기화 중...</div>
+              <div className="empty-state">랭킹을 불러오는 중...</div>
             ) : leaderboard.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px' }}>아직 등록된 랭커가 없습니다.</div>
+              <div className="empty-state">아직 등록된 기록이 없습니다.</div>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '15px' }}>
+              <table className="ranking-table">
                 <thead>
-                  <tr style={{ color: '#38bdf8', borderBottom: '2px solid #334155', textAlign: 'left' }}>
-                    <th style={{ padding: '10px 8px' }}>순위</th>
-                    <th style={{ padding: '10px 8px' }}>유저명</th>
-                    <th style={{ padding: '10px 8px' }}>생존 시간</th>
-                    <th style={{ padding: '10px 8px', textAlign: 'center' }}>Lv</th>
-                    <th style={{ padding: '10px 8px', textAlign: 'center' }}>Q's</th>
+                  <tr>
+                    <th>순위</th>
+                    <th>이름</th>
+                    <th>점수</th>
+                    <th>생존</th>
+                    <th>Lv</th>
+                    <th>Q</th>
                   </tr>
                 </thead>
                 <tbody>
                   {leaderboard.map((entry, idx) => (
-                    <tr key={entry.id} style={{ 
-                      borderBottom: '1px solid #1e293b',
-                      backgroundColor: idx === 0 ? 'rgba(251, 191, 36, 0.1)' : 'transparent'
-                    }}>
-                      <td className="title-font" style={{ padding: '12px 8px', fontWeight: 'bold', color: idx === 0 ? '#fcd34d' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#b45309' : '#64748b' }}>
-                        #{idx + 1}
-                      </td>
-                      <td style={{ padding: '12px 8px', fontWeight: idx === 0 ? 'bold' : 'normal', color: idx === 0 ? '#fff' : '#cbd5e1' }}>
-                        {entry.username.substring(0, 10)}
-                      </td>
-                      <td className="title-font" style={{ padding: '12px 8px', color: '#fcd34d' }}>{Math.floor(entry.survival_time)}s</td>
-                      <td style={{ padding: '12px 8px', textAlign: 'center', color: '#60a5fa' }}>{entry.level}</td>
-                      <td style={{ padding: '12px 8px', textAlign: 'center', color: '#10b981' }}>{entry.correct_answers}</td>
+                    <tr key={entry.id}>
+                      <td className="title-font rank-number">#{idx + 1}</td>
+                      <td>{(entry.username || 'Unknown').substring(0, 12)}</td>
+                      <td className="title-font">{entry.score ?? 0}</td>
+                      <td className="title-font">{Math.floor(entry.survival_time)}s</td>
+                      <td>{entry.level}</td>
+                      <td>{entry.correct_answers}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             )}
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 };

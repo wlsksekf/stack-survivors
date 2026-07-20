@@ -17,6 +17,119 @@ import { checkCircleCollision } from '../game/engine/physics';
 import { initInput } from '../game/engine/input';
 import { useGameStore } from '../store/gameStore';
 
+const getMonsterScaling = (survivalTime: number) => {
+  const elapsedMinutes = survivalTime / 60;
+
+  return {
+    healthMultiplier: Math.min(1 + elapsedMinutes * 0.18, 4),
+    speedMultiplier: Math.min(1 + elapsedMinutes * 0.07, 2)
+  };
+};
+
+const getSpawnInterval = (survivalTime: number) => {
+  return Math.max(0.5, 1.2 - (survivalTime / 60) * 0.07);
+};
+
+const getSpawnCount = (survivalTime: number) => {
+  if (survivalTime < 90) return 1;
+  return Math.min(4, 2 + Math.floor((survivalTime - 90) / 120));
+};
+
+const getMonsterType = (survivalTime: number): 'ladybug' | 'caterpillar' | 'bee' | 'spider' => {
+  const r = Math.random();
+
+  if (survivalTime > 180) {
+    if (r < 0.14) return 'spider';
+    if (r < 0.38) return 'caterpillar';
+    if (r < 0.62) return 'bee';
+  } else if (survivalTime > 60) {
+    if (r < 0.16) return 'caterpillar';
+    if (r < 0.36) return 'bee';
+  }
+
+  return 'ladybug';
+};
+
+type ItemEffect = {
+  type: ItemType;
+  x: number;
+  y: number;
+  age: number;
+  duration: number;
+};
+
+const drawItemEffect = (
+  ctx: CanvasRenderingContext2D,
+  effect: ItemEffect,
+  width: number,
+  height: number
+) => {
+  const progress = Math.min(effect.age / effect.duration, 1);
+  const alpha = 1 - progress;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.lineWidth = 3;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  if (effect.type === 'bomb') {
+    const maxRadius = Math.hypot(width, height);
+    const radius = 35 + maxRadius * progress;
+
+    ctx.strokeStyle = '#fb7185';
+    ctx.shadowColor = '#fb7185';
+    ctx.shadowBlur = 24;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = `rgba(251, 113, 133, ${0.18 * alpha})`;
+    ctx.fillRect(0, 0, width, height);
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillStyle = '#ffe4e6';
+    ctx.fillText('SYSTEM WIPE', effect.x, effect.y - 28 * progress);
+  }
+
+  if (effect.type === 'magnet') {
+    ctx.strokeStyle = '#38d9ff';
+    ctx.shadowColor = '#38d9ff';
+    ctx.shadowBlur = 18;
+
+    for (let i = 0; i < 3; i++) {
+      const radius = 160 - progress * 120 - i * 34;
+      if (radius > 12) {
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillStyle = '#dff8ff';
+    ctx.fillText('EXP SYNC', effect.x, effect.y - 36);
+  }
+
+  if (effect.type === 'coffee') {
+    const radius = 28 + progress * 48;
+
+    ctx.strokeStyle = '#34d399';
+    ctx.shadowColor = '#34d399';
+    ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#bbf7d0';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText('+', effect.x, effect.y);
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillText('RECOVER', effect.x, effect.y - 34);
+  }
+
+  ctx.restore();
+};
+
 export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
   const [gameOver, setGameOver] = useState(false);
   const requestRef = useRef<number>(0);
@@ -28,6 +141,7 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
   const projectilesRef = useRef<IProjectile[]>([]);
   const expsRef = useRef<Experience[]>([]);
   const itemsRef = useRef<Item[]>([]);
+  const itemEffectsRef = useRef<ItemEffect[]>([]);
   
   const spawnTimerRef = useRef<number>(0);
   const survivalTimerRef = useRef<number>(0);
@@ -49,6 +163,7 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
     projectilesRef.current = [];
     expsRef.current = [];
     itemsRef.current = [];
+    itemEffectsRef.current = [];
     survivalTimerRef.current = 0;
     skillTimersRef.current = {};
 
@@ -109,43 +224,50 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
 
     // Spawn monsters
     spawnTimerRef.current += dt;
-    if (spawnTimerRef.current > 1.0) { // Spawn faster
+    if (spawnTimerRef.current > getSpawnInterval(survivalTimerRef.current)) {
       spawnTimerRef.current = 0;
-      const edge = Math.floor(Math.random() * 4);
-      let mx = 0, my = 0;
-      if (edge === 0) { mx = Math.random() * width; my = -20; }
-      else if (edge === 1) { mx = width + 20; my = Math.random() * height; }
-      else if (edge === 2) { mx = Math.random() * width; my = height + 20; }
-      else { mx = -20; my = Math.random() * height; }
-      
-      // Determine monster type based on survival time
-      let type: 'ladybug' | 'caterpillar' | 'bee' | 'spider' = 'ladybug';
-      const r = Math.random();
-      
-      if (survivalTimerRef.current > 180) { // After 3 minutes
-        if (r < 0.1) type = 'spider';
-        else if (r < 0.3) type = 'caterpillar';
-        else if (r < 0.5) type = 'bee';
-      } else if (survivalTimerRef.current > 60) { // After 1 minute
-        if (r < 0.1) type = 'caterpillar';
-        else if (r < 0.25) type = 'bee';
-      }
 
-      monstersRef.current.push(new Monster(mx, my, type));
+      for (let i = 0; i < getSpawnCount(survivalTimerRef.current); i++) {
+        const edge = Math.floor(Math.random() * 4);
+        let mx = 0, my = 0;
+        const spread = i * 22;
+
+        if (edge === 0) { mx = Math.random() * width; my = -20 - spread; }
+        else if (edge === 1) { mx = width + 20 + spread; my = Math.random() * height; }
+        else if (edge === 2) { mx = Math.random() * width; my = height + 20 + spread; }
+        else { mx = -20 - spread; my = Math.random() * height; }
+
+        monstersRef.current.push(new Monster(
+          mx,
+          my,
+          getMonsterType(survivalTimerRef.current),
+          getMonsterScaling(survivalTimerRef.current)
+        ));
+      }
     }
 
     // Auto-attack based on active skills
     for (const skill of state.activeSkills) {
       if (skillTimersRef.current[skill.name] === undefined) {
         skillTimersRef.current[skill.name] = 0;
-        
-        // Spawn orbital/aura skills immediately (only 1 needed per level)
-        if (skill.name === 'JavaScript') {
-          projectilesRef.current.push(new JavaScriptSkill(0, skill.level));
+      }
+
+      if (skill.name === 'JavaScript') {
+        let aura = projectilesRef.current.find((p): p is JavaScriptSkill => p instanceof JavaScriptSkill);
+        if (!aura) {
+          aura = new JavaScriptSkill(0, skill.level);
+          projectilesRef.current.push(aura);
         }
-        if (skill.name === 'HTML') {
-          projectilesRef.current.push(new HtmlSkill(0, skill.level));
+        aura.setLevel(skill.level);
+      }
+
+      if (skill.name === 'HTML') {
+        let shield = projectilesRef.current.find((p): p is HtmlSkill => p instanceof HtmlSkill);
+        if (!shield) {
+          shield = new HtmlSkill(0, skill.level);
+          projectilesRef.current.push(shield);
         }
+        shield.setLevel(skill.level);
       }
       
       skillTimersRef.current[skill.name] += dt;
@@ -251,6 +373,14 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
       }
 
       if (item.isCollected) {
+        itemEffectsRef.current.push({
+          type: item.type,
+          x: item.type === 'coffee' ? player.x : item.x,
+          y: item.type === 'coffee' ? player.y : item.y,
+          age: 0,
+          duration: item.type === 'bomb' ? 0.75 : 0.65
+        });
+
         if (item.type === 'coffee') {
           player.health = Math.min(player.health + 50, player.maxHealth);
         } else if (item.type === 'bomb') {
@@ -267,6 +397,15 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
           expsRef.current = [];
         }
         items.splice(i, 1);
+      }
+    }
+
+    for (let i = itemEffectsRef.current.length - 1; i >= 0; i--) {
+      const effect = itemEffectsRef.current[i];
+      effect.age += dt;
+
+      if (effect.age >= effect.duration) {
+        itemEffectsRef.current.splice(i, 1);
       }
     }
   };
@@ -312,6 +451,7 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
     // Game Entities
     expsRef.current.forEach(e => e.draw(ctx));
     itemsRef.current.forEach(item => item.draw(ctx));
+    itemEffectsRef.current.forEach(effect => drawItemEffect(ctx, effect, width, height));
     projectilesRef.current.forEach(p => p.draw(ctx));
     monstersRef.current.forEach(m => m.draw(ctx));
     playerRef.current.draw(ctx);

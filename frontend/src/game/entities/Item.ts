@@ -8,31 +8,26 @@ export class Item {
   type: ItemType;
   radius: number = 10;
   isCollected: boolean = false;
-  emoji: string;
-  lifetime: number = 20; // Disappears after 20 seconds
+  label: string;
+  lifetime: number = 20;
 
   constructor(x: number, y: number, type: ItemType) {
     this.x = x;
     this.y = y;
     this.type = type;
 
-    switch (this.type) {
-      case 'magnet':
-        this.emoji = '🧲';
-        break;
-      case 'bomb':
-        this.emoji = '💣';
-        break;
-      case 'coffee':
-        this.emoji = '☕';
-        break;
-    }
+    const labels: Record<ItemType, string> = {
+      magnet: 'MAG',
+      bomb: 'BOMB',
+      coffee: 'HP'
+    };
+
+    this.label = labels[type];
   }
 
   update(dt: number, player: Player) {
     this.lifetime -= dt;
 
-    // Check collision with player
     const dx = this.x - player.x;
     const dy = this.y - player.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
@@ -44,12 +39,37 @@ export class Item {
 
   draw(ctx: CanvasRenderingContext2D) {
     if (this.lifetime < 3 && Math.floor(this.lifetime * 10) % 2 === 0) {
-      return; // Blinking effect before disappearing
+      return;
     }
 
-    ctx.font = '20px Arial';
+    const colors: Record<ItemType, string> = {
+      magnet: '#38d9ff',
+      bomb: '#fb7185',
+      coffee: '#34d399'
+    };
+
+    const pulse = 1 + Math.sin(this.lifetime * 8) * 0.08;
+    const color = colors[this.type];
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.scale(pulse, pulse);
+
+    ctx.beginPath();
+    ctx.arc(0, 0, this.radius + 9, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(9, 14, 25, 0.78)';
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12;
+    ctx.stroke();
+
+    ctx.font = 'bold 10px sans-serif';
+    ctx.fillStyle = color;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(this.emoji, this.x, this.y);
+    ctx.fillText(this.label, 0, 0);
+    ctx.restore();
   }
 }
