@@ -18,7 +18,7 @@ export const GameOverScreen: React.FC = () => {
         const username = localStorage.getItem('username') || `Guest${Math.floor(Math.random() * 10000)}`;
         localStorage.setItem('username', username);
 
-        const res = await fetch('/api/score', {
+        await fetch('/api/score', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
