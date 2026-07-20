@@ -86,6 +86,11 @@ jobs:
             # 메인 Nginx 가상 네트워크망 및 설정 파일 최종 동기화
             echo "Syncing Global Proxy Nginx..."
             cd /home/${{ secrets.SERVER_USER }}/global-proxy
+            
+            # scp-action이 nginx/ 폴더 바로 아래에 복사한 설정 파일을 conf.d/ 안으로 정확히 이동
+            mkdir -p nginx/conf.d
+            mv nginx/stack-survivors.conf nginx/conf.d/ || true
+            
             docker compose down
             
             # 1. Nginx만 먼저 가동 (Certbot 데몬이 켜져있으면 Lock 파일 때문에 겹침)
