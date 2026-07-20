@@ -13,7 +13,6 @@ export const QuizModal: React.FC = () => {
   const { isQuizModalOpen, closeQuiz } = useGameStore();
   const [question, setQuestion] = useState<Question | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
 
