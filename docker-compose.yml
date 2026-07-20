@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   backend:
-    image: ${DOCKER_USERNAME}/stack-survivors-backend:latest
+    image: ${DOCKER_USERNAME:-local}/stack-survivors-backend:latest
     build:
       context: .
       dockerfile: backend/Dockerfile
@@ -19,7 +19,7 @@ services:
     restart: always
 
   frontend:
-    image: ${DOCKER_USERNAME}/stack-survivors-frontend:latest
+    image: ${DOCKER_USERNAME:-local}/stack-survivors-frontend:latest
     build:
       context: .
       dockerfile: frontend/Dockerfile

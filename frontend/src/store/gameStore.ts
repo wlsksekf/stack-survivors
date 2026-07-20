@@ -31,6 +31,7 @@ interface GameState {
   selectSkill: (skill: string) => void;
   openQuiz: () => void;
   closeQuiz: (isCorrect: boolean, skillName?: string) => void;
+  updateSurvivalTime: (time: number) => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -84,8 +85,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     isLevelUpModalOpen: false
   })),
   
-  togglePause: () => set((state) => ({ isPaused: !state.isPaused })),
-  resumeGame: () => set({ isPaused: false }),
+  togglePause: () => set((state) => {
+    if (state.isLevelUpModalOpen || state.isQuizModalOpen) return state;
+    return { isPaused: !state.isPaused };
+  }),
+  resumeGame: () => set((state) => {
+    if (state.isLevelUpModalOpen || state.isQuizModalOpen) return state;
+    return { isPaused: false };
+  }),
   
   selectSkill: (skillName) => set((state) => {
     const existing = state.activeSkills.find(s => s.name === skillName);
@@ -137,5 +144,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     } else {
       set({ isPaused: false, isQuizModalOpen: false });
     }
-  }
+  },
+  
+  updateSurvivalTime: (time) => set((state) => {
+    // Only update if the integer second has changed to prevent 60fps re-renders
+    if (Math.floor(state.survivalTime) !== Math.floor(time)) {
+      return { survivalTime: time };
+    }
+    return state;
+  })
 }));

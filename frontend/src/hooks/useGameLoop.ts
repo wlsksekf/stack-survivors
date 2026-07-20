@@ -91,6 +91,7 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
     }
 
     survivalTimerRef.current += dt;
+    state.updateSurvivalTime(survivalTimerRef.current);
 
     const player = playerRef.current;
     player.update(dt, width, height);
@@ -271,18 +272,44 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
   };
 
   const draw = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    ctx.fillStyle = '#1e293b'; 
+    // Cyberspace / Dark Neon Background
+    ctx.fillStyle = '#050510'; 
     ctx.fillRect(0, 0, width, height);
 
-    ctx.strokeStyle = '#334155'; 
+    // Draw Cyberpunk Grid
+    ctx.strokeStyle = 'rgba(14, 165, 233, 0.15)'; // Neon blue grid
     ctx.lineWidth = 1;
-    for(let i = 0; i < width; i += 50) {
-      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, height); ctx.stroke();
-    }
-    for(let i = 0; i < height; i += 50) {
-      ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(width, i); ctx.stroke();
-    }
+    
+    const gridSize = 50;
+    
+    // Animate grid slightly based on survival time for a moving effect
+    const offsetX = (survivalTimerRef.current * 10) % gridSize;
+    const offsetY = (survivalTimerRef.current * 10) % gridSize;
 
+    ctx.beginPath();
+    for (let x = -offsetX; x < width; x += gridSize) {
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+    }
+    for (let y = -offsetY; y < height; y += gridSize) {
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+    }
+    ctx.stroke();
+
+    // Add some random floating digital particles or "binary" rain effect faintly
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = '#0ea5e9';
+    ctx.font = '10px "Orbitron", monospace';
+    for (let i = 0; i < 20; i++) {
+      // Pseudo-random based on time and index so it flickers but stays somewhat stable
+      const px = ((i * 137 + survivalTimerRef.current * 5) % width);
+      const py = ((i * 349 + survivalTimerRef.current * 15) % height);
+      ctx.fillText(Math.random() > 0.5 ? '1' : '0', px, py);
+    }
+    ctx.globalAlpha = 1.0;
+
+    // Game Entities
     expsRef.current.forEach(e => e.draw(ctx));
     itemsRef.current.forEach(item => item.draw(ctx));
     projectilesRef.current.forEach(p => p.draw(ctx));

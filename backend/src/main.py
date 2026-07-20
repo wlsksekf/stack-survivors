@@ -5,14 +5,13 @@ from pydantic import BaseModel
 from supabase import create_client, Client
 from typing import List
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     VITE_SUPABASE_URL: str = ""
     VITE_SUPABASE_ANON_KEY: str = ""
     
-    class Config:
-        env_file = "../.env"
+    model_config = SettingsConfigDict(env_file="../../.env", extra="ignore")
 
 settings = Settings()
 
@@ -56,7 +55,7 @@ def submit_score(score: ScoreRequest):
         raise HTTPException(status_code=500, detail="Supabase not configured")
     
     try:
-        data, count = supabase.table("leaderboard").insert({
+        data, count = supabase.table("game_records").insert({
             "username": score.username,
             "survival_time": score.survival_time,
             "level": score.level,
@@ -73,7 +72,7 @@ def get_leaderboard():
     
     try:
         # Sort by survival_time descending, then level descending
-        response = supabase.table("leaderboard").select("*").order("survival_time", desc=True).limit(10).execute()
+        response = supabase.table("game_records").select("*").order("survival_time", desc=True).limit(10).execute()
         return {"data": response.data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
