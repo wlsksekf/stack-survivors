@@ -54,11 +54,6 @@ ON CONFLICT (id) DO UPDATE SET
   avatar_url = COALESCE(EXCLUDED.avatar_url, public.profiles.avatar_url),
   updated_at = timezone('utc'::text, now());
 
-UPDATE public.game_records
-SET username = COALESCE(public.profiles.nickname, public.profiles.email, public.game_records.username)
-FROM public.profiles
-WHERE public.game_records.user_id = public.profiles.id;
-
 CREATE TABLE IF NOT EXISTS public.game_records (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
@@ -95,6 +90,11 @@ BEGIN
       ON DELETE SET NULL;
   END IF;
 END $$;
+
+UPDATE public.game_records
+SET username = COALESCE(public.profiles.nickname, public.profiles.email, public.game_records.username)
+FROM public.profiles
+WHERE public.game_records.user_id = public.profiles.id;
 
 DROP TABLE IF EXISTS public.questions;
 

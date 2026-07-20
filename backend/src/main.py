@@ -8,6 +8,8 @@ from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    SUPABASE_URL: str = ""
+    SUPABASE_ANON_KEY: str = ""
     VITE_SUPABASE_URL: str = ""
     VITE_SUPABASE_ANON_KEY: str = ""
     
@@ -15,8 +17,8 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-SUPABASE_URL = settings.VITE_SUPABASE_URL
-SUPABASE_KEY = settings.VITE_SUPABASE_ANON_KEY
+SUPABASE_URL = settings.SUPABASE_URL or settings.VITE_SUPABASE_URL
+SUPABASE_KEY = settings.SUPABASE_ANON_KEY or settings.VITE_SUPABASE_ANON_KEY
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
 
@@ -105,20 +107,36 @@ def get_leaderboard():
         raise HTTPException(status_code=500, detail="Supabase not configured")
     
     try:
-        # Sort by survived_time descending, then level descending
-        response = (
-            supabase.table("game_records")
-            .select("*")
-            .order("score", desc=True)
-            .order("survived_time", desc=True)
-            .limit(10)
-            .execute()
-        )
+        try:
+            response = (
+                supabase.table("game_records")
+                .select("*")
+                .order("score", desc=True)
+                .order("survived_time", desc=True)
+                .limit(10)
+                .execute()
+            )
+        except Exception as leaderboard_error:
+            if "score" not in str(leaderboard_error):
+                raise leaderboard_error
+
+            response = (
+                supabase.table("game_records")
+                .select("*")
+                .order("survived_time", desc=True)
+                .limit(10)
+                .execute()
+            )
         
-        # We need to return survival_time so the frontend handles it properly
         for row in response.data:
             if "survived_time" in row:
                 row["survival_time"] = row["survived_time"]
+            if "score" not in row:
+                row["score"] = (
+                    int(row.get("survived_time") or 0)
+                    + int(row.get("level") or row.get("max_level") or 1) * 100
+                    + int(row.get("correct_answers") or 0) * 300
+                )
                 
         return {"data": response.data}
     except Exception as e:

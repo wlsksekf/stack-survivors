@@ -9,6 +9,8 @@ services:
     container_name: stack-survivors-backend
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     deploy:
       resources:
         limits:
