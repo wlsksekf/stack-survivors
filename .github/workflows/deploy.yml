@@ -94,9 +94,9 @@ jobs:
             # 2. 인증서 자동 발급 시도 (이미 유효한 인증서가 있으면 --keep-until-expiring 에 의해 무시됨)
             docker compose run --rm --entrypoint certbot certbot certonly \
               --webroot -w /var/www/certbot \
-              -d api.stack-survivors.site \
-              -d stack-survivors.site \
-              --email admin@stack-survivors.site \
+              -d api.stack-survivors.duckdns.org \
+              -d stack-survivors.duckdns.org \
+              --email admin@stack-survivors.duckdns.org \
               --agree-tos \
               --no-eff-email \
               --keep-until-expiring \
