@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Player } from '../game/entities/Player';
 import { Monster } from '../game/entities/Monster';
+import { Item } from '../game/entities/Item';
+import type { ItemType } from '../game/entities/Item';
 import type { IProjectile } from '../game/entities/skills/IProjectile';
 import { PythonSkill } from '../game/entities/skills/PythonSkill';
 import { JavaScriptSkill } from '../game/entities/skills/JavaScriptSkill';
@@ -25,6 +27,7 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
   const monstersRef = useRef<Monster[]>([]);
   const projectilesRef = useRef<IProjectile[]>([]);
   const expsRef = useRef<Experience[]>([]);
+  const itemsRef = useRef<Item[]>([]);
   
   const spawnTimerRef = useRef<number>(0);
   const survivalTimerRef = useRef<number>(0);
@@ -45,6 +48,7 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
     monstersRef.current = [];
     projectilesRef.current = [];
     expsRef.current = [];
+    itemsRef.current = [];
     survivalTimerRef.current = 0;
     skillTimersRef.current = {};
 
@@ -102,7 +106,20 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
       else if (edge === 2) { mx = Math.random() * width; my = height + 20; }
       else { mx = -20; my = Math.random() * height; }
       
-      monstersRef.current.push(new Monster(mx, my));
+      // Determine monster type based on survival time
+      let type: 'ladybug' | 'caterpillar' | 'bee' | 'spider' = 'ladybug';
+      const r = Math.random();
+      
+      if (survivalTimerRef.current > 180) { // After 3 minutes
+        if (r < 0.1) type = 'spider';
+        else if (r < 0.3) type = 'caterpillar';
+        else if (r < 0.5) type = 'bee';
+      } else if (survivalTimerRef.current > 60) { // After 1 minute
+        if (r < 0.1) type = 'caterpillar';
+        else if (r < 0.25) type = 'bee';
+      }
+
+      monstersRef.current.push(new Monster(mx, my, type));
     }
 
     // Auto-attack based on active skills
@@ -179,8 +196,16 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
       m.update(dt, player);
 
       if (m.isDead) {
-        // Drop EXP and remove monster
+        // Drop EXP
         expsRef.current.push(new Experience(m.x, m.y));
+        
+        // 5% chance to drop an item
+        if (Math.random() < 0.05) {
+          const items: ItemType[] = ['magnet', 'bomb', 'coffee'];
+          const dropType = items[Math.floor(Math.random() * items.length)];
+          itemsRef.current.push(new Item(m.x, m.y, dropType));
+        }
+
         monsters.splice(i, 1);
         continue;
       }
@@ -201,6 +226,37 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
         exps.splice(i, 1);
       }
     }
+
+    // Update Items
+    const items = itemsRef.current;
+    for (let i = items.length - 1; i >= 0; i--) {
+      const item = items[i];
+      item.update(dt, player);
+
+      if (item.lifetime <= 0) {
+        items.splice(i, 1);
+        continue;
+      }
+
+      if (item.isCollected) {
+        if (item.type === 'coffee') {
+          player.health = Math.min(player.health + 50, player.maxHealth);
+        } else if (item.type === 'bomb') {
+          // Kill all monsters on screen
+          monstersRef.current.forEach(m => {
+            expsRef.current.push(new Experience(m.x, m.y));
+          });
+          monstersRef.current = [];
+        } else if (item.type === 'magnet') {
+          // Collect all EXP
+          expsRef.current.forEach(e => {
+            useGameStore.getState().addExp(e.amount);
+          });
+          expsRef.current = [];
+        }
+        items.splice(i, 1);
+      }
+    }
   };
 
   const draw = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
@@ -217,6 +273,7 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
     }
 
     expsRef.current.forEach(e => e.draw(ctx));
+    itemsRef.current.forEach(item => item.draw(ctx));
     projectilesRef.current.forEach(p => p.draw(ctx));
     monstersRef.current.forEach(m => m.draw(ctx));
     playerRef.current.draw(ctx);

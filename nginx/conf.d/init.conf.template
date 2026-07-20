@@ -1,0 +1,14 @@
+server {
+    listen 80;
+    server_name api.stack-survivors.site; # Change to real domain if necessary
+
+    # Let's Encrypt challenge path
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 200 "Nginx Temporary HTTP Server for SSL Issuance";
+        add_header Content-Type text/plain;
+    }
+}

@@ -1,11 +1,10 @@
 name: Deploy to Oracle Server
 
-# 푸시해도 자동 실행되지 않도록, 존재하지 않는 브랜치를 지정하거나 
-# 수동으로만 실행(workflow_dispatch)되도록 설정해 두었습니다.
+# main 브랜치에 코드가 푸시(push)되면 자동으로 배포 파이프라인이 실행됩니다.
 on:
   push:
     branches:
-      - 'placeholder-branch-for-deploy' # 메인 브랜치가 아닌 임시 브랜치
+      - main # 이제 main 브랜치 푸시 시 자동 배포됩니다.
   workflow_dispatch: # GitHub Actions 탭에서 수동으로 실행할 수 있는 옵션
 
 jobs:

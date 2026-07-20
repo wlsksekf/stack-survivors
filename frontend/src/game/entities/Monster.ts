@@ -10,10 +10,46 @@ export class Monster {
   health: number = 30;
   maxHealth: number = 30;
   isDead: boolean = false;
+  emoji: string = '🐞'; // Default emoji
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, type: 'ladybug' | 'caterpillar' | 'bee' | 'spider' = 'ladybug') {
     this.x = x;
     this.y = y;
+
+    switch (type) {
+      case 'ladybug':
+        this.emoji = '🐞';
+        this.speed = 100;
+        this.health = 30;
+        this.maxHealth = 30;
+        this.radius = 12;
+        this.damage = 10;
+        break;
+      case 'caterpillar':
+        this.emoji = '🐛';
+        this.speed = 40;
+        this.health = 150;
+        this.maxHealth = 150;
+        this.radius = 18;
+        this.damage = 25;
+        break;
+      case 'bee':
+        this.emoji = '🐝';
+        this.speed = 180;
+        this.health = 15;
+        this.maxHealth = 15;
+        this.radius = 8;
+        this.damage = 5;
+        break;
+      case 'spider':
+        this.emoji = '🕷️';
+        this.speed = 80;
+        this.health = 300;
+        this.maxHealth = 300;
+        this.radius = 22;
+        this.damage = 40;
+        break;
+    }
   }
 
   update(dt: number, player: Player) {
@@ -39,11 +75,11 @@ export class Monster {
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
-    ctx.fill();
-    ctx.closePath();
+    // Draw Emoji instead of circle
+    ctx.font = `${this.radius * 2}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(this.emoji, this.x, this.y);
 
     // Draw small health bar for monster
     if (this.health < this.maxHealth) {

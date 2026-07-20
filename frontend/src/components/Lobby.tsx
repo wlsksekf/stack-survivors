@@ -1,8 +1,21 @@
 import React from 'react';
 import { useGameStore } from '../store/gameStore';
+import { useAuthStore } from '../store/authStore';
+import { supabase } from '../lib/supabase';
 
 export const Lobby: React.FC = () => {
   const { startGame } = useGameStore();
+  const { user, profile } = useAuthStore();
+
+  const handleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+    });
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <div style={{
@@ -15,9 +28,49 @@ export const Lobby: React.FC = () => {
       <h1 style={{ fontSize: '64px', marginBottom: '10px', color: '#60a5fa' }}>
         Stack Survivors
       </h1>
-      <p style={{ fontSize: '24px', color: '#94a3b8', marginBottom: '50px' }}>
+      <p style={{ fontSize: '24px', color: '#94a3b8', marginBottom: '40px' }}>
         Defeat the bug monsters and master your tech stack!
       </p>
+
+      {user ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', marginBottom: '40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            {profile?.avatar_url && (
+              <img 
+                src={profile.avatar_url} 
+                alt="Profile" 
+                style={{ width: '50px', height: '50px', borderRadius: '50%', border: '2px solid #3b82f6' }}
+              />
+            )}
+            <span style={{ fontSize: '20px', fontWeight: 'bold' }}>
+              Welcome, {profile?.nickname || user.email}!
+            </span>
+          </div>
+          <button 
+            onClick={handleLogout}
+            style={{
+              padding: '8px 20px', fontSize: '14px',
+              backgroundColor: '#ef4444', color: 'white',
+              border: 'none', borderRadius: '8px', cursor: 'pointer',
+            }}
+          >
+            Logout
+          </button>
+        </div>
+      ) : (
+        <button 
+          onClick={handleLogin}
+          style={{
+            padding: '12px 30px', fontSize: '18px', fontWeight: 'bold',
+            backgroundColor: '#ffffff', color: '#333',
+            border: 'none', borderRadius: '8px', cursor: 'pointer',
+            marginBottom: '40px', display: 'flex', alignItems: 'center', gap: '10px'
+          }}
+        >
+          <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" style={{ width: '20px' }} />
+          Sign in with Google
+        </button>
+      )}
       
       <button 
         onClick={startGame}
