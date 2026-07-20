@@ -47,8 +47,11 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ~/stack-survivors || cd /path/to/stack-survivors
+            if [ ! -d "~/stack-survivors" ]; then
+              git clone https://github.com/wlsksekf/stack-survivors.git ~/stack-survivors
+            fi
+            cd ~/stack-survivors
             echo "${{ secrets.DOT_ENV }}" > .env
             git pull origin main
-            docker-compose pull
-            docker-compose up -d --build
+            docker compose pull
+            docker compose up -d --build
