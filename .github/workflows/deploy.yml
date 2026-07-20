@@ -87,10 +87,11 @@ jobs:
             echo "Syncing Global Proxy Nginx..."
             cd /home/${{ secrets.SERVER_USER }}/global-proxy
             docker compose down
-            docker compose up -d
+            
+            # 1. Nginx만 먼저 가동 (Certbot 데몬이 켜져있으면 Lock 파일 때문에 겹침)
+            docker compose up -d nginx
 
-            # 인증서 자동 발급 시도 (이미 유효한 인증서가 있으면 --keep-until-expiring 에 의해 무시됨)
-            # 최초 배포(80포트 모드)인 경우 여기서 인증서를 발급받음
+            # 2. 인증서 자동 발급 시도 (이미 유효한 인증서가 있으면 --keep-until-expiring 에 의해 무시됨)
             docker compose run --rm certbot certonly \
               --webroot -w /var/www/certbot \
               -d api.stack-survivors.site \
@@ -98,4 +99,8 @@ jobs:
               --email admin@stack-survivors.site \
               --agree-tos \
               --no-eff-email \
-              --keep-until-expiring
+              --keep-until-expiring \
+              --non-interactive
+
+            # 3. Certbot 데몬을 포함한 전체 프록시 정상 구동
+            docker compose up -d

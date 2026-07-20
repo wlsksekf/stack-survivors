@@ -67,7 +67,7 @@ export const Lobby: React.FC = () => {
             marginBottom: '40px', display: 'flex', alignItems: 'center', gap: '10px'
           }}
         >
-          <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" style={{ width: '20px' }} />
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{ width: '20px' }} />
           Sign in with Google
         </button>
       )}
