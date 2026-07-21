@@ -1,4 +1,5 @@
 import { Player } from './Player';
+import { DamageText } from './DamageText';
 
 interface MonsterScaling {
   healthMultiplier: number;
@@ -16,6 +17,8 @@ export class Monster {
   maxHealth: number = 30;
   isDead: boolean = false;
   emoji: string = '🐞'; // Default emoji
+  expYield: number = 2;
+  damageTexts: DamageText[] = [];
 
   constructor(
     x: number,
@@ -34,6 +37,7 @@ export class Monster {
         this.maxHealth = 30;
         this.radius = 12;
         this.damage = 10;
+        this.expYield = 2;
         break;
       case 'caterpillar':
         this.emoji = '🐛';
@@ -42,6 +46,7 @@ export class Monster {
         this.maxHealth = 150;
         this.radius = 18;
         this.damage = 25;
+        this.expYield = 10;
         break;
       case 'bee':
         this.emoji = '🐝';
@@ -50,6 +55,7 @@ export class Monster {
         this.maxHealth = 15;
         this.radius = 8;
         this.damage = 5;
+        this.expYield = 5;
         break;
       case 'spider':
         this.emoji = '🕷️';
@@ -58,6 +64,7 @@ export class Monster {
         this.maxHealth = 300;
         this.radius = 22;
         this.damage = 40;
+        this.expYield = 20;
         break;
     }
 
@@ -79,10 +86,18 @@ export class Monster {
 
     this.x += dx * this.speed * dt;
     this.y += dy * this.speed * dt;
+    
+    for (let i = this.damageTexts.length - 1; i >= 0; i--) {
+      this.damageTexts[i].update(dt);
+      if (this.damageTexts[i].lifetime <= 0) {
+        this.damageTexts.splice(i, 1);
+      }
+    }
   }
 
   takeDamage(amount: number) {
     this.health -= amount;
+    this.damageTexts.push(new DamageText(this.x, this.y, amount, false));
     if (this.health <= 0) {
       this.isDead = true;
     }
@@ -105,5 +120,7 @@ export class Monster {
       ctx.fillStyle = 'lightgreen';
       ctx.fillRect(this.x - barWidth / 2, this.y - this.radius - 8, barWidth * hpPercent, barHeight);
     }
+
+    this.damageTexts.forEach(dt => dt.draw(ctx));
   }
 }

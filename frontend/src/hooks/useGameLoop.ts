@@ -212,12 +212,12 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
     player.update(dt, width, height);
     
     // Quiz Timer Logic
-    // We want to trigger a quiz every 180 seconds (3 minutes)
+    // We want to trigger a quiz every 60 seconds (1 minute)
     // We can track the previous survival time interval
-    const previousInterval = Math.floor((survivalTimerRef.current - dt) / 180);
-    const currentInterval = Math.floor(survivalTimerRef.current / 180);
+    const previousInterval = Math.floor((survivalTimerRef.current - dt) / 60);
+    const currentInterval = Math.floor(survivalTimerRef.current / 60);
     
-    // If we crossed a 3-minute boundary (e.g. 180s, 360s, 540s)
+    // If we crossed a 1-minute boundary (e.g. 60s, 120s, 180s)
     if (currentInterval > previousInterval && currentInterval > 0) {
       state.openQuiz();
     }
@@ -231,11 +231,14 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
         const edge = Math.floor(Math.random() * 4);
         let mx = 0, my = 0;
         const spread = i * 22;
+        
+        const cameraX = player.x - width / 2;
+        const cameraY = player.y - height / 2;
 
-        if (edge === 0) { mx = Math.random() * width; my = -20 - spread; }
-        else if (edge === 1) { mx = width + 20 + spread; my = Math.random() * height; }
-        else if (edge === 2) { mx = Math.random() * width; my = height + 20 + spread; }
-        else { mx = -20 - spread; my = Math.random() * height; }
+        if (edge === 0) { mx = cameraX + Math.random() * width; my = cameraY - 20 - spread; }
+        else if (edge === 1) { mx = cameraX + width + 20 + spread; my = cameraY + Math.random() * height; }
+        else if (edge === 2) { mx = cameraX + Math.random() * width; my = cameraY + height + 20 + spread; }
+        else { mx = cameraX - 20 - spread; my = cameraY + Math.random() * height; }
 
         monstersRef.current.push(new Monster(
           mx,
@@ -331,7 +334,7 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
 
       if (m.isDead) {
         // Drop EXP
-        expsRef.current.push(new Experience(m.x, m.y));
+        expsRef.current.push(new Experience(m.x, m.y, m.expYield));
         
         // 5% chance to drop an item
         if (Math.random() < 0.05) {
@@ -345,7 +348,7 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
       }
 
       if (checkCircleCollision(player, m)) {
-        player.health -= m.damage * dt * 2;
+        player.takeDamage(m.damage * dt * 2);
       }
     }
 
@@ -386,7 +389,7 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
         } else if (item.type === 'bomb') {
           // Kill all monsters on screen
           monstersRef.current.forEach(m => {
-            expsRef.current.push(new Experience(m.x, m.y));
+            expsRef.current.push(new Experience(m.x, m.y, m.expYield));
           });
           monstersRef.current = [];
         } else if (item.type === 'magnet') {
@@ -411,9 +414,16 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
   };
 
   const draw = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    const player = playerRef.current;
+    const cameraX = player.x - width / 2;
+    const cameraY = player.y - height / 2;
+
     // Cyberspace / Dark Neon Background
     ctx.fillStyle = '#050510'; 
     ctx.fillRect(0, 0, width, height);
+
+    ctx.save();
+    ctx.translate(-cameraX, -cameraY);
 
     // Draw Cyberpunk Grid
     ctx.strokeStyle = 'rgba(14, 165, 233, 0.15)'; // Neon blue grid
@@ -421,18 +431,17 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
     
     const gridSize = 50;
     
-    // Animate grid slightly based on survival time for a moving effect
-    const offsetX = (survivalTimerRef.current * 10) % gridSize;
-    const offsetY = (survivalTimerRef.current * 10) % gridSize;
+    const startX = Math.floor(cameraX / gridSize) * gridSize;
+    const startY = Math.floor(cameraY / gridSize) * gridSize;
 
     ctx.beginPath();
-    for (let x = -offsetX; x < width; x += gridSize) {
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
+    for (let x = startX; x < cameraX + width; x += gridSize) {
+      ctx.moveTo(x, cameraY);
+      ctx.lineTo(x, cameraY + height);
     }
-    for (let y = -offsetY; y < height; y += gridSize) {
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
+    for (let y = startY; y < cameraY + height; y += gridSize) {
+      ctx.moveTo(cameraX, y);
+      ctx.lineTo(cameraX + width, y);
     }
     ctx.stroke();
 
@@ -441,9 +450,8 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
     ctx.fillStyle = '#0ea5e9';
     ctx.font = '10px "Orbitron", monospace';
     for (let i = 0; i < 20; i++) {
-      // Pseudo-random based on time and index so it flickers but stays somewhat stable
-      const px = ((i * 137 + survivalTimerRef.current * 5) % width);
-      const py = ((i * 349 + survivalTimerRef.current * 15) % height);
+      const px = startX + ((i * 137 + survivalTimerRef.current * 5) % width);
+      const py = startY + ((i * 349 + survivalTimerRef.current * 15) % height);
       ctx.fillText(Math.random() > 0.5 ? '1' : '0', px, py);
     }
     ctx.globalAlpha = 1.0;
@@ -454,7 +462,9 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
     itemEffectsRef.current.forEach(effect => drawItemEffect(ctx, effect, width, height));
     projectilesRef.current.forEach(p => p.draw(ctx));
     monstersRef.current.forEach(m => m.draw(ctx));
-    playerRef.current.draw(ctx);
+    player.draw(ctx);
+    
+    ctx.restore();
 
     if (gameOver) {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';

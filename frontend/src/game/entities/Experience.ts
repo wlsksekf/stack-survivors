@@ -11,9 +11,24 @@ export class Experience {
   magnetRadius: number = 100;
   speed: number = 300;
 
-  constructor(x: number, y: number) {
+  constructor(x: number, y: number, amount: number = 2) {
     this.x = x;
     this.y = y;
+    this.amount = amount;
+    
+    if (this.amount >= 20) {
+      this.color = '#ef4444'; // Red
+      this.radius = 8;
+    } else if (this.amount >= 10) {
+      this.color = '#f59e0b'; // Orange
+      this.radius = 6;
+    } else if (this.amount >= 5) {
+      this.color = '#3b82f6'; // Blue
+      this.radius = 5;
+    } else {
+      this.color = '#10b981'; // Green
+      this.radius = 4;
+    }
   }
 
   update(dt: number, player: Player) {

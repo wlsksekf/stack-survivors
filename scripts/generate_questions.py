@@ -10,6 +10,19 @@ languages = {
     'React': ['컴포넌트', 'JSX', '상태(State)', 'Props', '생명주기', 'Hooks', 'Context API', '라우팅', '성능 최적화', '가상 DOM']
 }
 
+import random
+
+distractors = [
+    "전혀 무관한 설명입니다.",
+    "다른 언어의 특징입니다.",
+    "과거 버전에만 존재했던 기능입니다.",
+    "문법적 오류를 발생시키는 안티 패턴입니다.",
+    "운영체제 레벨에서 지원하는 기능입니다.",
+    "네트워크 프로토콜의 일부입니다.",
+    "하드웨어 종속적인 특성입니다.",
+    "보안 취약점을 유발하는 방식입니다."
+]
+
 queries = []
 
 # Generate 30 questions for each language
@@ -19,15 +32,16 @@ for lang, topics in languages.items():
         question_text = f"{lang}의 {topic}에 대한 설명으로 올바른 것은? (기초 문제 {i+1})"
         
         # Options
+        wrong_options = random.sample(distractors, 3)
         options = [
             f"{topic}의 올바른 특징입니다.",
-            f"{topic}와 전혀 무관한 설명입니다.",
-            f"다른 언어의 {topic} 특징입니다.",
-            f"과거 버전에만 존재했던 {topic} 기능입니다."
+            f"{topic}와(과) {wrong_options[0]}",
+            f"{topic}와(과) {wrong_options[1]}",
+            f"{topic}와(과) {wrong_options[2]}"
         ]
         
-        # Randomize correct answer index a bit
-        correct_index = i % 4
+        # Randomize correct answer index
+        correct_index = random.randint(0, 3)
         
         # Swap correct answer to the designated correct_index
         correct_text = options[0]
@@ -40,9 +54,10 @@ for lang, topics in languages.items():
         query = f"INSERT INTO public.questions (skill_type, question_text, options, correct_answer_index, difficulty, explanation) VALUES ('{lang}', '{question_text}', '{options_json}', {correct_index}, 1, '{explanation}');"
         queries.append(query)
 
-with open('../supabase/seed.sql', 'a', encoding='utf-8') as f:
-    f.write("\n-- Auto-generated 210 questions (30 per skill type)\n")
+with open('../seed_questions.sql', 'w', encoding='utf-8') as f:
+    f.write("-- Auto-generated 210 questions (30 per skill type)\n")
+    f.write("TRUNCATE TABLE public.questions;\n\n")
     for q in queries:
         f.write(q + "\n")
 
-print("Generated 210 questions and appended to seed.sql")
+print("Generated 210 questions and saved to seed_questions.sql")

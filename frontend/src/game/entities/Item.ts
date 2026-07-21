@@ -17,9 +17,9 @@ export class Item {
     this.type = type;
 
     const labels: Record<ItemType, string> = {
-      magnet: 'MAG',
-      bomb: 'BOMB',
-      coffee: 'HP'
+      magnet: '🧲',
+      bomb: '💣',
+      coffee: '☕'
     };
 
     this.label = labels[type];
@@ -65,11 +65,11 @@ export class Item {
     ctx.shadowBlur = 12;
     ctx.stroke();
 
-    ctx.font = 'bold 10px sans-serif';
+    ctx.font = '16px Arial';
     ctx.fillStyle = color;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(this.label, 0, 0);
+    ctx.fillText(this.label, 0, 1);
     ctx.restore();
   }
 }
