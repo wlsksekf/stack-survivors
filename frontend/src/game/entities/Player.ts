@@ -17,7 +17,7 @@ export class Player {
     this.y = y;
   }
 
-  update(dt: number, canvasWidth: number, canvasHeight: number) {
+  update(dt: number, _canvasWidth: number, _canvasHeight: number) {
     if (this.damageCooldown > 0) {
       this.damageCooldown -= dt;
     }
