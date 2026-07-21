@@ -336,8 +336,8 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
         // Drop EXP
         expsRef.current.push(new Experience(m.x, m.y, m.expYield));
         
-        // 5% chance to drop an item
-        if (Math.random() < 0.05) {
+        // 1% chance to drop an item
+        if (Math.random() < 0.01) {
           const items: ItemType[] = ['magnet', 'bomb', 'coffee'];
           const dropType = items[Math.floor(Math.random() * items.length)];
           itemsRef.current.push(new Item(m.x, m.y, dropType));

@@ -5,7 +5,7 @@ import type { IProjectile } from './IProjectile';
 export class JavaScriptSkill implements IProjectile {
   orbitRadius: number = 100;
   color: string = '#f7df1e'; // Yellow JS logo
-  damage: number = 10;
+  damage: number = 5;
   isDead: boolean = false;
   hitCooldowns: Map<Monster, number> = new Map();
   
@@ -30,7 +30,7 @@ export class JavaScriptSkill implements IProjectile {
 
   setLevel(level: number) {
     this.orbitRadius = 100 + level * 15;
-    this.damage = 10 + level * 3;
+    this.damage = 5 + level * 1.5;
   }
 
   update(dt: number, monsters: Monster[], player: Player) {

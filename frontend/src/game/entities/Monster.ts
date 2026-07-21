@@ -32,38 +32,38 @@ export class Monster {
     switch (type) {
       case 'ladybug':
         this.emoji = '🐞';
-        this.speed = 100;
-        this.health = 30;
-        this.maxHealth = 30;
+        this.speed = 110;
+        this.health = 35;
+        this.maxHealth = 35;
         this.radius = 12;
-        this.damage = 10;
+        this.damage = 12;
         this.expYield = 2;
         break;
       case 'caterpillar':
         this.emoji = '🐛';
-        this.speed = 40;
-        this.health = 150;
-        this.maxHealth = 150;
+        this.speed = 45;
+        this.health = 170;
+        this.maxHealth = 170;
         this.radius = 18;
-        this.damage = 25;
+        this.damage = 28;
         this.expYield = 10;
         break;
       case 'bee':
         this.emoji = '🐝';
-        this.speed = 180;
-        this.health = 15;
-        this.maxHealth = 15;
+        this.speed = 195;
+        this.health = 20;
+        this.maxHealth = 20;
         this.radius = 8;
-        this.damage = 5;
+        this.damage = 7;
         this.expYield = 5;
         break;
       case 'spider':
         this.emoji = '🕷️';
-        this.speed = 80;
-        this.health = 300;
-        this.maxHealth = 300;
+        this.speed = 90;
+        this.health = 350;
+        this.maxHealth = 350;
         this.radius = 22;
-        this.damage = 40;
+        this.damage = 45;
         this.expYield = 20;
         break;
     }
