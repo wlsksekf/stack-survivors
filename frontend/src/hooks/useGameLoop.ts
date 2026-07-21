@@ -31,17 +31,22 @@ const getSpawnInterval = (survivalTime: number) => {
 };
 
 const getSpawnCount = (survivalTime: number) => {
-  if (survivalTime < 90) return 1;
-  return Math.min(4, 2 + Math.floor((survivalTime - 90) / 120));
+  // Start with 1, and add 1 more every 45 seconds, up to a maximum of 12.
+  return Math.min(12, 1 + Math.floor(survivalTime / 45));
 };
 
-const getMonsterType = (survivalTime: number): 'ladybug' | 'caterpillar' | 'bee' | 'spider' => {
+const getMonsterType = (survivalTime: number): 'ladybug' | 'caterpillar' | 'bee' | 'spider' | 'boss' => {
   const r = Math.random();
 
+  // Boss spawn condition: after 120 seconds, there is a small chance to spawn a boss
+  if (survivalTime > 120 && r < 0.03) {
+    return 'boss';
+  }
+
   if (survivalTime > 180) {
-    if (r < 0.14) return 'spider';
-    if (r < 0.38) return 'caterpillar';
-    if (r < 0.62) return 'bee';
+    if (r < 0.16) return 'spider';
+    if (r < 0.40) return 'caterpillar';
+    if (r < 0.64) return 'bee';
   } else if (survivalTime > 60) {
     if (r < 0.16) return 'caterpillar';
     if (r < 0.36) return 'bee';

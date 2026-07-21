@@ -23,7 +23,7 @@ export class Monster {
   constructor(
     x: number,
     y: number,
-    type: 'ladybug' | 'caterpillar' | 'bee' | 'spider' = 'ladybug',
+    type: 'ladybug' | 'caterpillar' | 'bee' | 'spider' | 'boss' = 'ladybug',
     scaling: MonsterScaling = { healthMultiplier: 1, speedMultiplier: 1 }
   ) {
     this.x = x;
@@ -65,6 +65,15 @@ export class Monster {
         this.radius = 22;
         this.damage = 45;
         this.expYield = 20;
+        break;
+      case 'boss':
+        this.emoji = '🐛'; // Giant Centipede
+        this.speed = 70;
+        this.health = 3000;
+        this.maxHealth = 3000;
+        this.radius = 45;
+        this.damage = 80;
+        this.expYield = 150;
         break;
     }
 
