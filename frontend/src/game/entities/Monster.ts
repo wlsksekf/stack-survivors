@@ -17,6 +17,7 @@ export class Monster {
   maxHealth: number = 30;
   isDead: boolean = false;
   emoji: string = '🐞'; // Default emoji
+  filter: string = 'none';
   expYield: number = 2;
   damageTexts: DamageText[] = [];
 
@@ -36,7 +37,7 @@ export class Monster {
         this.health = 35;
         this.maxHealth = 35;
         this.radius = 12;
-        this.damage = 12;
+        this.damage = 25;
         this.expYield = 2;
         break;
       case 'caterpillar':
@@ -45,7 +46,7 @@ export class Monster {
         this.health = 170;
         this.maxHealth = 170;
         this.radius = 18;
-        this.damage = 28;
+        this.damage = 50;
         this.expYield = 10;
         break;
       case 'bee':
@@ -54,7 +55,7 @@ export class Monster {
         this.health = 20;
         this.maxHealth = 20;
         this.radius = 8;
-        this.damage = 7;
+        this.damage = 15;
         this.expYield = 5;
         break;
       case 'spider':
@@ -63,16 +64,17 @@ export class Monster {
         this.health = 350;
         this.maxHealth = 350;
         this.radius = 22;
-        this.damage = 45;
+        this.damage = 70;
         this.expYield = 20;
         break;
       case 'boss':
-        this.emoji = '🐛'; // Giant Centipede
+        this.emoji = '🦂'; // Scorpion
+        this.filter = 'hue-rotate(240deg) saturate(200%)';
         this.speed = 70;
         this.health = 3000;
         this.maxHealth = 3000;
         this.radius = 45;
-        this.damage = 80;
+        this.damage = 120;
         this.expYield = 150;
         break;
     }
@@ -113,11 +115,19 @@ export class Monster {
   }
 
   draw(ctx: CanvasRenderingContext2D) {
+    if (this.filter !== 'none') {
+      ctx.filter = this.filter;
+    }
+
     // Draw Emoji instead of circle
     ctx.font = `${this.radius * 2}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(this.emoji, this.x, this.y);
+
+    if (this.filter !== 'none') {
+      ctx.filter = 'none';
+    }
 
     // Draw small health bar for monster
     if (this.health < this.maxHealth) {

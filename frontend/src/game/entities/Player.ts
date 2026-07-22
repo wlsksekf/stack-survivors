@@ -39,7 +39,7 @@ export class Player {
     if (amount <= 0 || this.damageCooldown > 0) return;
     this.health -= amount;
     this.damageTexts.push(new DamageText(this.x, this.y, amount, true));
-    this.damageCooldown = 0.5; // 0.5 seconds of i-frames
+    this.damageCooldown = 0.2; // 0.2 seconds of i-frames
   }
 
   draw(ctx: CanvasRenderingContext2D) {

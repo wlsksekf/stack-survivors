@@ -90,7 +90,7 @@ const drawItemEffect = (
     ctx.stroke();
 
     ctx.fillStyle = `rgba(251, 113, 133, ${0.18 * alpha})`;
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(effect.x - width, effect.y - height, width * 2, height * 2);
     ctx.font = 'bold 18px sans-serif';
     ctx.fillStyle = '#ffe4e6';
     ctx.fillText('SYSTEM WIPE', effect.x, effect.y - 28 * progress);
