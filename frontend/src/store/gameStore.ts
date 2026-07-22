@@ -78,13 +78,23 @@ export const useGameStore = create<GameState>((set, get) => ({
     return { exp: newExp };
   }),
   
-  levelUp: () => set((state) => ({
-    level: state.level + 1,
-    exp: state.exp - state.expToNextLevel,
-    expToNextLevel: Math.floor(state.expToNextLevel * 1.5),
-    isPaused: false,
-    isLevelUpModalOpen: false
-  })),
+  levelUp: () => set((state) => {
+    if (state.exp >= state.expToNextLevel) {
+      return {
+        level: state.level + 1,
+        exp: state.exp - state.expToNextLevel,
+        expToNextLevel: Math.floor(state.expToNextLevel * 1.5),
+        isPaused: false,
+        isLevelUpModalOpen: false
+      };
+    } else {
+      return {
+        level: state.level + 1,
+        isPaused: false,
+        isLevelUpModalOpen: false
+      };
+    }
+  }),
   
   togglePause: () => set((state) => {
     if (state.isLevelUpModalOpen || state.isQuizModalOpen) return state;

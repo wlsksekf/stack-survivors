@@ -35,8 +35,22 @@ export const GameCanvas: React.FC = () => {
     isLevelUpModalOpen,
     isQuizModalOpen,
     survivalTime,
-    activeSkills
+    activeSkills,
+    correctAnswers
   } = useGameStore();
+
+  const [bestScore, setBestScore] = useState(() => {
+    return parseInt(localStorage.getItem('bestScore') || '0', 10);
+  });
+
+  const currentScore = Math.floor(survivalTime * 10) + (level * 100) + (correctAnswers * 1000);
+
+  useEffect(() => {
+    if (currentScore > bestScore) {
+      setBestScore(currentScore);
+      localStorage.setItem('bestScore', currentScore.toString());
+    }
+  }, [currentScore, bestScore]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -219,6 +233,15 @@ export const GameCanvas: React.FC = () => {
 
             <div className="title-font hud-time">
               {formattedMinutes}:{formattedSeconds}
+            </div>
+          </div>
+
+          <div className="hud-score" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginLeft: '20px' }}>
+            <div className="title-font" style={{ fontSize: '24px', color: '#fbbf24', textShadow: '0 0 10px rgba(251,191,36,0.5)' }}>
+              SCORE {currentScore.toLocaleString()}
+            </div>
+            <div className="title-font" style={{ fontSize: '14px', color: '#9ca3af' }}>
+              BEST {bestScore.toLocaleString()}
             </div>
           </div>
 

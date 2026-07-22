@@ -38,8 +38,8 @@ const getSpawnCount = (survivalTime: number) => {
 const getMonsterType = (survivalTime: number): 'ladybug' | 'caterpillar' | 'bee' | 'spider' | 'boss' => {
   const r = Math.random();
 
-  // Boss spawn condition: after 120 seconds, there is a small chance to spawn a boss
-  if (survivalTime > 120 && r < 0.03) {
+  // Boss spawn condition: after 120 seconds, there is a very small chance to spawn a boss
+  if (survivalTime > 120 && r < 0.0005) {
     return 'boss';
   }
 
@@ -341,11 +341,15 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
         // Drop EXP
         expsRef.current.push(new Experience(m.x, m.y, m.expYield));
         
-        // 1% chance to drop an item
-        if (Math.random() < 0.01) {
-          const items: ItemType[] = ['magnet', 'bomb', 'coffee'];
-          const dropType = items[Math.floor(Math.random() * items.length)];
-          itemsRef.current.push(new Item(m.x, m.y, dropType));
+        if (m.emoji === '🦂') {
+          itemsRef.current.push(new Item(m.x, m.y, 'package'));
+        } else {
+          // 1% chance to drop an item
+          if (Math.random() < 0.01) {
+            const items: ItemType[] = ['magnet', 'bomb', 'coffee'];
+            const dropType = items[Math.floor(Math.random() * items.length)];
+            itemsRef.current.push(new Item(m.x, m.y, dropType));
+          }
         }
 
         monsters.splice(i, 1);
@@ -391,6 +395,8 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
 
         if (item.type === 'coffee') {
           player.health = Math.min(player.health + 50, player.maxHealth);
+        } else if (item.type === 'package') {
+          state.openLevelUpModal();
         } else if (item.type === 'bomb') {
           // Kill all monsters on screen
           monstersRef.current.forEach(m => {
