@@ -138,9 +138,9 @@ export const Lobby: React.FC = () => {
                     <th>순위</th>
                     <th>이름</th>
                     <th>점수</th>
-                    <th>생존</th>
+                    <th>생존 시간</th>
                     <th>Lv</th>
-                    <th>Q</th>
+                    <th>푼 문제</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -149,7 +149,7 @@ export const Lobby: React.FC = () => {
                       <td className="title-font rank-number">#{idx + 1}</td>
                       <td>{(entry.username || 'Unknown').substring(0, 12)}</td>
                       <td className="title-font">{entry.score ?? 0}</td>
-                      <td className="title-font">{Math.floor(entry.survival_time)}s</td>
+                      <td className="title-font">{Math.floor(entry.survival_time / 60)}분 {Math.floor(entry.survival_time % 60)}초</td>
                       <td>{entry.level}</td>
                       <td>{entry.correct_answers}</td>
                     </tr>

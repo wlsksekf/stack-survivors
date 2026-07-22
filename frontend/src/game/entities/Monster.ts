@@ -18,6 +18,7 @@ export class Monster {
   isDead: boolean = false;
   emoji: string = '🐞'; // Default emoji
   filter: string = 'none';
+  isBoss: boolean = false;
   expYield: number = 2;
   damageTexts: DamageText[] = [];
 
@@ -68,8 +69,9 @@ export class Monster {
         this.expYield = 20;
         break;
       case 'boss':
+        this.isBoss = true;
         this.emoji = '🦂'; // Scorpion
-        this.filter = 'hue-rotate(240deg) saturate(200%)';
+        this.filter = 'drop-shadow(0 0 15px #ff3333) saturate(250%) contrast(150%)';
         this.speed = 70;
         this.health = 15000;
         this.maxHealth = 15000;

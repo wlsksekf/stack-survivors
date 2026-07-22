@@ -11,7 +11,7 @@ export class JavaSkill implements IProjectile {
   radius: number = 10;
   speed: number = 150; // Slow
   color: string = '#ea580c'; // Orange coffee
-  damage: number = 30;
+  damage: number = 60;
   isDead: boolean = false;
   lifespan: number = 4;
   aoeRadius: number = 60;
@@ -21,7 +21,7 @@ export class JavaSkill implements IProjectile {
   constructor(x: number, y: number, targetX: number, targetY: number, level: number) {
     this.x = x;
     this.y = y;
-    this.damage += level * 10;
+    this.damage += level * 20;
     this.aoeRadius += level * 15;
     
     let dirX = targetX - x;

@@ -349,7 +349,7 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
         // Drop EXP
         expsRef.current.push(new Experience(m.x, m.y, m.expYield));
         
-        if (m.emoji === '🦂') {
+        if (m.isBoss) {
           itemsRef.current.push(new Item(m.x, m.y, 'package'));
         } else {
           // 1% chance to drop an item
@@ -406,11 +406,17 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
         } else if (item.type === 'package') {
           state.openLevelUpModal();
         } else if (item.type === 'bomb') {
-          // Kill all monsters on screen
+          // Kill all monsters on screen, except bosses
+          const remainingMonsters: Monster[] = [];
           monstersRef.current.forEach(m => {
-            expsRef.current.push(new Experience(m.x, m.y, m.expYield));
+            if (m.isBoss) {
+              m.takeDamage(500); // Bomb deals 500 damage to boss
+              remainingMonsters.push(m);
+            } else {
+              expsRef.current.push(new Experience(m.x, m.y, m.expYield));
+            }
           });
-          monstersRef.current = [];
+          monstersRef.current = remainingMonsters;
         } else if (item.type === 'magnet') {
           // Collect all EXP
           expsRef.current.forEach(e => {

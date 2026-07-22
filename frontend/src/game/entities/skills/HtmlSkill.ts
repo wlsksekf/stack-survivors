@@ -42,17 +42,24 @@ export class HtmlSkill implements IProjectile {
     }
 
     for (const m of monsters) {
-      if (!m.isDead && !this.hitCooldowns.has(m) && checkCircleCollision(shieldCollider, m)) {
-        m.takeDamage(this.damage);
-        this.hitCooldowns.set(m, 0.1); // Extremely fast hit rate
-        
-        // Pushback effect
-        const dx = m.x - player.x;
-        const dy = m.y - player.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist > 0) {
-          m.x += (dx / dist) * 10;
-          m.y += (dy / dist) * 10;
+      if (!m.isDead && !this.hitCooldowns.has(m)) {
+        const distToPlayer = Math.hypot(m.x - player.x, m.y - player.y);
+        const isInsideCircle = distToPlayer < this.orbitRadius;
+        const hitByShield = checkCircleCollision(shieldCollider, m);
+
+        if (isInsideCircle || hitByShield) {
+          m.takeDamage(this.damage);
+          this.hitCooldowns.set(m, 0.1); // Extremely fast hit rate
+          
+          // Pushback effect
+          const dx = m.x - player.x;
+          const dy = m.y - player.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist > 0) {
+            // Push away strongly
+            m.x += (dx / dist) * 40;
+            m.y += (dy / dist) * 40;
+          }
         }
       }
     }

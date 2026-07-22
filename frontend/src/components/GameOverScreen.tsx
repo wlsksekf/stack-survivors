@@ -44,7 +44,7 @@ export const GameOverScreen: React.FC = () => {
             </div>
             <div className="stat-row">
               <span>생존 시간</span>
-              <strong className="title-font">{Math.floor(survivalTime)}s</strong>
+              <strong className="title-font">{Math.floor(survivalTime / 60)}분 {Math.floor(survivalTime % 60)}초</strong>
             </div>
             <div className="stat-row">
               <span>정답 수</span>
