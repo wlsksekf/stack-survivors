@@ -71,8 +71,8 @@ export class Monster {
         this.emoji = '🦂'; // Scorpion
         this.filter = 'hue-rotate(240deg) saturate(200%)';
         this.speed = 70;
-        this.health = 3000;
-        this.maxHealth = 3000;
+        this.health = 15000;
+        this.maxHealth = 15000;
         this.radius = 45;
         this.damage = 120;
         this.expYield = 150;

@@ -355,9 +355,16 @@ export const QuizModal: React.FC = () => {
         Math.random() * validQuestions.length
       );
 
-      setQuestion(
-        validQuestions[randomIndex]
-      );
+      const selectedQ = validQuestions[randomIndex];
+
+      // Shuffle options to ensure the correct answer isn't always the same index
+      const shuffledOptions = selectedQ.options.map((opt, i) => ({ opt, isCorrect: i === selectedQ.correct_answer_index }));
+      shuffledOptions.sort(() => Math.random() - 0.5);
+      const newCorrectIndex = shuffledOptions.findIndex(x => x.isCorrect);
+      selectedQ.options = shuffledOptions.map(x => x.opt);
+      selectedQ.correct_answer_index = newCorrectIndex;
+
+      setQuestion(selectedQ);
     } catch (error: unknown) {
       if (
         error instanceof DOMException

@@ -1,6 +1,6 @@
 import { Player } from './Player';
 
-export type ItemType = 'magnet' | 'bomb' | 'coffee';
+export type ItemType = 'magnet' | 'bomb' | 'coffee' | 'package';
 
 export class Item {
   x: number;
@@ -19,7 +19,8 @@ export class Item {
     const labels: Record<ItemType, string> = {
       magnet: '🧲',
       bomb: '💣',
-      coffee: '☕'
+      coffee: '☕',
+      package: '📦'
     };
 
     this.label = labels[type];
@@ -45,7 +46,8 @@ export class Item {
     const colors: Record<ItemType, string> = {
       magnet: '#38d9ff',
       bomb: '#fb7185',
-      coffee: '#34d399'
+      coffee: '#34d399',
+      package: '#facc15'
     };
 
     const pulse = 1 + Math.sin(this.lifetime * 8) * 0.08;

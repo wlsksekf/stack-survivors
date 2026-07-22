@@ -32,6 +32,7 @@ interface GameState {
   openQuiz: () => void;
   closeQuiz: (isCorrect: boolean, skillName?: string) => void;
   updateSurvivalTime: (time: number) => void;
+  openLevelUpModal: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -152,5 +153,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       return { survivalTime: time };
     }
     return state;
-  })
+  }),
+  
+  openLevelUpModal: () => set({ isPaused: true, isLevelUpModalOpen: true })
 }));
