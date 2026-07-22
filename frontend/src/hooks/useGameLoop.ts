@@ -139,6 +139,7 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
   const [gameOver, setGameOver] = useState(false);
   const requestRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
+  const isFirstFrameRef = useRef<boolean>(true);
   
   // Game state
   const playerRef = useRef(new Player(400, 300));
@@ -171,16 +172,23 @@ export function useGameLoop(canvasRef: React.RefObject<HTMLCanvasElement | null>
     itemEffectsRef.current = [];
     survivalTimerRef.current = 0;
     skillTimersRef.current = {};
+    isFirstFrameRef.current = true;
 
     const loop = (time: number) => {
       const state = useGameStore.getState();
       
-      if (lastTimeRef.current !== undefined) {
+      if (isFirstFrameRef.current) {
+        isFirstFrameRef.current = false;
+        lastTimeRef.current = time;
+      } else {
         const deltaTime = (time - lastTimeRef.current) / 1000; // in seconds
+        
+        // Prevent huge delta times if tab was inactive
+        const safeDeltaTime = Math.min(deltaTime, 0.1);
         
         // Only update if not paused and not game over
         if (!state.isPaused && !gameOver) {
-          update(deltaTime, canvas.width, canvas.height);
+          update(safeDeltaTime, canvas.width, canvas.height);
         }
         
         // Always draw (even if paused)
